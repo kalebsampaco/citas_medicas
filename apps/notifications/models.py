@@ -13,3 +13,9 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.channel} -> {self.to} ({self.status})"
+
+    class Meta:
+        verbose_name = 'Notification'
+        verbose_name_plural = 'Notifications'
+        db_table = 'notifications'
+        ordering = ['-id']

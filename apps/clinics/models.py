@@ -9,6 +9,12 @@ class Clinic(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Clinic'
+        verbose_name_plural = 'Clinics'
+        db_table = 'clinics'
+        ordering = ['-id']
+
 class Room(models.Model):
     clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, related_name="rooms")
     name = models.CharField(max_length=100)
@@ -16,3 +22,9 @@ class Room(models.Model):
 
     def __str__(self):
         return f"{self.clinic.name} - {self.name}"
+
+    class Meta:
+        verbose_name = 'Room'
+        verbose_name_plural = 'Rooms'
+        db_table = 'rooms'
+        ordering = ['-id']

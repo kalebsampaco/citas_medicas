@@ -21,8 +21,20 @@ class Appointment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name = 'Appointment'
+        verbose_name_plural = 'Appointments'
+        db_table = 'appointments'
+        ordering = ['-id']
+
 class AppointmentAction(models.Model):
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name="actions")
     action = models.CharField(max_length=30)  # confirm/reschedule/cancel
     payload = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'AppointmentAction'
+        verbose_name_plural = 'AppointmentActions'
+        db_table = 'appointmentActions'
+        ordering = ['-id']

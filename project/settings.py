@@ -33,7 +33,6 @@ INSTALLED_APPS = [
     "apps.appointments",
     "apps.notifications",
     "apps.audit",
-    "apps.common",
 ]
 
 MIDDLEWARE = [
@@ -45,6 +44,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.audit.middleware.AuditMiddleware",  # Middleware de auditoría
 ]
 
 ROOT_URLCONF = "project.urls"

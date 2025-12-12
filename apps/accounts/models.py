@@ -16,3 +16,9 @@ class User(AbstractUser):
     @property
     def is_operator(self):
         return self.role == Role.OPERATOR
+
+    class Meta:
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+        db_table = 'users'
+        ordering = ['-date_joined']

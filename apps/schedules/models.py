@@ -11,3 +11,7 @@ class Schedule(models.Model):
 
     class Meta:
         unique_together = ("doctor", "room", "date", "start_time", "end_time")
+        verbose_name = 'Schedule'
+        verbose_name_plural = 'Schedules'
+        db_table = 'schedules'
+        ordering = ['-id']

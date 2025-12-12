@@ -17,3 +17,9 @@ class Patient(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} - {self.document_number}"
+
+    class Meta:
+        verbose_name = 'Patient'
+        verbose_name_plural = 'Patients'
+        db_table = 'patients'
+        ordering = ['-id']

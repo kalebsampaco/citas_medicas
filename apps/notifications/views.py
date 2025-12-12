@@ -1,5 +1,6 @@
 from apps.appointments.models import (Appointment, AppointmentAction,
                                       AppointmentStatus)
+from apps.audit.services import log_model_change, log_twilio_inbound
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -19,14 +20,32 @@ class SendReminderView(views.APIView):
             f"es el {appointment.start_datetime.strftime('%Y/%m/%d a las %H:%M')}. "
             "Responde: Confirmar / Reprogramar / Cancelar"
         )
-        sid = send_whatsapp_message(to, body)
-        Notification.objects.create(
+        # Enviar mensaje (ahora con logging integrado)
+        sid = send_whatsapp_message(
+            to,
+            body,
+            notification=None,  # Se creará después
+            appointment=appointment
+        )
+
+        # Crear notificación
+        notification = Notification.objects.create(
             appointment=appointment,
             to=to,
             template="reminder_freeform",
             status="queued",
             external_id=sid,
         )
+
+        # Registrar en auditoría
+        log_model_change(
+            instance=notification,
+            action='CREATE',
+            user=request.user if request.user.is_authenticated else None,
+            ip_address=getattr(request, 'audit_ip', None),
+            user_agent=getattr(request, 'audit_user_agent', None),
+        )
+
         return Response({"message_sid": sid})
 
 
@@ -38,6 +57,8 @@ class WhatsAppWebhookView(views.APIView):
     def post(self, request):
         from_number = request.data.get("From")  # whatsapp:+123...
         body = (request.data.get("Body") or "").strip().lower()
+        message_sid = request.data.get("MessageSid", "")
+
         # Find patient by phone (strip prefix)
         e164 = from_number.replace("whatsapp:", "") if from_number else None
         appointment = (
@@ -45,6 +66,19 @@ class WhatsAppWebhookView(views.APIView):
         )
         if not appointment:
             return Response({"detail": "No appointment found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Registrar mensaje entrante de Twilio
+        log_twilio_inbound(
+            message_sid=message_sid,
+            from_number=from_number,
+            to_number=request.data.get("To", ""),
+            body=request.data.get("Body", ""),
+            appointment=appointment,
+            response_data=dict(request.data)
+        )
+
+        # Guardar estado anterior para auditoría
+        old_status = appointment.status
 
         action = None
         if "confirm" in body or "confirmar" in body:
@@ -59,6 +93,24 @@ class WhatsAppWebhookView(views.APIView):
 
         if action:
             appointment.save()
+
+            # Registrar cambio de estado en auditoría
+            log_model_change(
+                instance=appointment,
+                action='UPDATE',
+                user=None,  # Cambio automático por webhook
+                changes={
+                    'status': {
+                        'old': old_status,
+                        'new': appointment.status
+                    },
+                    'trigger': 'whatsapp_webhook',
+                    'message_sid': message_sid
+                },
+                ip_address=getattr(request, 'audit_ip', None),
+                user_agent=getattr(request, 'audit_user_agent', None),
+            )
+
             AppointmentAction.objects.create(
                 appointment=appointment, action=action, payload={"from": from_number, "body": body}
             )
@@ -70,5 +122,6 @@ class WhatsAppWebhookView(views.APIView):
         else:
             reply = "Por favor responde: Confirmar / Reprogramar / Cancelar"
 
-        send_whatsapp_message(f"whatsapp:{e164}", reply)
+        # Enviar respuesta (con logging integrado)
+        send_whatsapp_message(f"whatsapp:{e164}", reply, appointment=appointment)
         return Response({"ok": True})

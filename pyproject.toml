@@ -15,6 +15,7 @@ django-cors-headers = "^4.4"
 celery = "^5.4"
 redis = "^5.0"
 twilio = "^9.0"
+djangorestframework-stubs = "^3.16.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"
