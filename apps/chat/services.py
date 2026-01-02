@@ -43,12 +43,13 @@ Siempre devuelve JSON:
 }
 
 INSTRUCCIONES CRÍTICAS:
-1. Cuando el usuario envíe un documento/cédula:
+1. Cuando el usuario envíe un documento/cédula (números):
    action="process_patient_cedula", data={cedula: "valor"}
-2. Cuando el usuario seleccione un médico (verá formato "ID|Nombre"):
-   - EXTRAE el doctor_id del formato "ID|Nombre" (es el número antes del |)
-   - action="select_doctor", data={doctor_id: <ID_como_número>}
+2. Cuando el usuario seleccione un médico con formato "ID|Nombre" (ej: "1|Dr. Pérez"):
+   - EXTRAE el doctor_id del número ANTES del |
+   - action="select_doctor", data={doctor_id: <número>}
    - Confirma el médico seleccionado en el mensaje
+   - NO ejecutes show_doctors de nuevo
 3. Cuando el usuario seleccione un horario: retorna los datos del horario
 4. Responde SIEMPRE con JSON válido, nunca texto plano después del JSON.
 5. Sé amable, claro y objetivo.
@@ -77,7 +78,7 @@ def _build_prompt(user_message: str, chat_history: List, user_role: str, current
         "selecting_action": "Espera que el usuario seleccione 1 o 2.",
         "getting_patient_cedula": "El usuario eligió agendar. Pide el documento del paciente (cédula, pasaporte, etc).",
         "selecting_doctor": "Ya tienes el documento del paciente. Busca el paciente por documento, confirma el nombre encontrado, y luego SIEMPRE ejecuta action='show_doctors' para mostrar el listado de médicos numerado.",
-        "selecting_date": "El usuario seleccionó un médico. Muestra la disponibilidad (fechas y horarios) y pide que seleccione uno.",
+        "selecting_date": "El usuario acaba de seleccionar un médico. Si el mensaje contiene el formato 'ID|Nombre', EXTRAE el doctor_id (el número antes del |) y ejecuta action='select_doctor' con ese doctor_id. Esto mostrará la disponibilidad del médico.",
         "confirming_appointment": "Confirma que desea agendar a esa hora y procede a crear la cita.",
         "view_doctor_agenda": "El usuario eligió ver agenda. Muestra listado de médicos numerado y pide seleccione uno para ver su disponibilidad.",
         "completed": "La acción se completó. Pregunta si desea hacer algo más.",

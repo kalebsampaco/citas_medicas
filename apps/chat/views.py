@@ -29,8 +29,26 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
 
         user_msg = ChatMessage.objects.create(session=session, role="user", content=text)
 
-        chat_history = list(session.messages.all())
-        ai_result = get_ai_response(text, chat_history, request.user, current_step=session.current_step)
+        # DETECCIÓN ANTICIPADA: Si estamos en "selecting_date" y el texto tiene formato "ID|Nombre"
+        # procesamos directamente sin llamar al AI
+        import re
+        pattern = r'^(\d+)\|(.+)$'
+        match = re.match(pattern, text)
+
+        if session.current_step == "selecting_date" and match:
+            # Extraer doctor_id del formato "ID|Nombre"
+            doctor_id = int(match.group(1))
+            doctor_name = match.group(2).strip()
+
+            ai_result = {
+                "message": f"Confirmando que has seleccionado a {doctor_name}. Mostrando disponibilidad...",
+                "action": "select_doctor",
+                "action_data": {"doctor_id": doctor_id},
+                "raw": text
+            }
+        else:
+            chat_history = list(session.messages.all())
+            ai_result = get_ai_response(text, chat_history, request.user, current_step=session.current_step)
 
         assistant_msg = ChatMessage.objects.create(
             session=session,
