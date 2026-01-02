@@ -40,6 +40,32 @@ class AuditLog(models.Model):
         ]
 
 
+class EndpointLog(models.Model):
+    """Log de uso de endpoints HTTP."""
+    user = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='endpoint_logs')
+    company = models.ForeignKey('accounts.Company', on_delete=models.SET_NULL, null=True, blank=True, related_name='endpoint_logs')
+    method = models.CharField(max_length=10)
+    path = models.CharField(max_length=500)
+    status_code = models.IntegerField()
+    duration_ms = models.FloatField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    request_body = models.JSONField(null=True, blank=True)
+    response_body = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'endpoint_logs'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['path']),
+            models.Index(fields=['method']),
+            models.Index(fields=['status_code']),
+            models.Index(fields=['company', '-created_at']),
+        ]
+
+
 class TwilioLog(models.Model):
     """Registra envíos y respuestas de Twilio/WhatsApp"""
     DIRECTION_CHOICES = [

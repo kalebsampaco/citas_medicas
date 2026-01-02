@@ -16,6 +16,11 @@ celery = "^5.4"
 redis = "^5.0"
 twilio = "^9.0"
 djangorestframework-stubs = "^3.16.6"
+djangorestframework-simplejwt = "^5.3"
+drf-yasg = "^1.21"
+boto3 = "^1.35"
+azure-communication-email = "^1.1"
+azure-core = "^1.30"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3"

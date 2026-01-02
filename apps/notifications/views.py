@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from .models import Notification
 from .services import send_whatsapp_message
+from .templates import parse_user_response, render_template
 
 
 class SendReminderView(views.APIView):
@@ -56,7 +57,7 @@ class WhatsAppWebhookView(views.APIView):
 
     def post(self, request):
         from_number = request.data.get("From")  # whatsapp:+123...
-        body = (request.data.get("Body") or "").strip().lower()
+        body = (request.data.get("Body") or "").strip()
         message_sid = request.data.get("MessageSid", "")
 
         # Find patient by phone (strip prefix)
@@ -72,7 +73,7 @@ class WhatsAppWebhookView(views.APIView):
             message_sid=message_sid,
             from_number=from_number,
             to_number=request.data.get("To", ""),
-            body=request.data.get("Body", ""),
+            body=body,
             appointment=appointment,
             response_data=dict(request.data)
         )
@@ -80,18 +81,18 @@ class WhatsAppWebhookView(views.APIView):
         # Guardar estado anterior para auditoría
         old_status = appointment.status
 
-        action = None
-        if "confirm" in body or "confirmar" in body:
-            appointment.status = AppointmentStatus.CONFIRMED
-            action = "confirm"
-        elif "reprogram" in body or "reprogramar" in body:
-            appointment.status = AppointmentStatus.RESCHEDULED
-            action = "reprogram"
-        elif "cancel" in body or "cancelar" in body:
-            appointment.status = AppointmentStatus.CANCELLED
-            action = "cancel"
+        # Analizar respuesta del usuario usando plantilla mejorada
+        action = parse_user_response(body, 'appointment_reminder_48h')
 
         if action:
+            # Actualizar estado de la cita basado en la acción
+            if action == "confirm":
+                appointment.status = AppointmentStatus.CONFIRMED
+            elif action == "reschedule":
+                appointment.status = AppointmentStatus.RESCHEDULED
+            elif action == "cancel":
+                appointment.status = AppointmentStatus.CANCELLED
+
             appointment.save()
 
             # Registrar cambio de estado en auditoría
@@ -105,22 +106,46 @@ class WhatsAppWebhookView(views.APIView):
                         'new': appointment.status
                     },
                     'trigger': 'whatsapp_webhook',
-                    'message_sid': message_sid
+                    'message_sid': message_sid,
+                    'user_action': action
                 },
                 ip_address=getattr(request, 'audit_ip', None),
                 user_agent=getattr(request, 'audit_user_agent', None),
             )
 
+            # Registrar acción en historial de cita
             AppointmentAction.objects.create(
-                appointment=appointment, action=action, payload={"from": from_number, "body": body}
+                appointment=appointment,
+                action=action,
+                payload={"from": from_number, "body": body, "status_before": old_status}
             )
-            reply = (
-                "Tu respuesta fue registrada. Gracias."
-                if action == "confirm"
-                else "Recibimos tu solicitud, el equipo te contactará para reprogramar/cancelar."
-            )
+
+            # Generar respuesta personalizada según acción
+            if action == "confirm":
+                reply = (
+                    f"¡Perfecto {appointment.patient.first_name}! Tu cita está confirmada para "
+                    f"{appointment.start_datetime.strftime('%d/%m/%Y a las %H:%M')}. "
+                    f"¡Te esperamos!"
+                )
+            elif action == "reschedule":
+                reply = (
+                    f"Entendido {appointment.patient.first_name}. Nuestro equipo se contactará "
+                    f"contigo pronto para ofrecer nuevas opciones de horario. ¡Gracias!"
+                )
+            elif action == "cancel":
+                reply = (
+                    f"Tu cita ha sido cancelada. Si en el futuro necesitas agendar otra, "
+                    f"contáctanos. ¡Que te recuperes!"
+                )
         else:
-            reply = "Por favor responde: Confirmar / Reprogramar / Cancelar"
+            # Si no se entiende la respuesta, mostrar opciones
+            reply = (
+                f"Disculpa {appointment.patient.first_name}, no entendí tu respuesta. "
+                f"Por favor responde:\n"
+                f"• CONFIRMAR\n"
+                f"• REPROGRAMAR\n"
+                f"• CANCELAR"
+            )
 
         # Enviar respuesta (con logging integrado)
         send_whatsapp_message(f"whatsapp:{e164}", reply, appointment=appointment)

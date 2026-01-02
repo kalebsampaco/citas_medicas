@@ -1,7 +1,8 @@
-from django.conf import settings
-from twilio.rest import Client
+import uuid
 
 from apps.audit.services import log_twilio_outbound
+from django.conf import settings
+from twilio.rest import Client
 
 
 def send_whatsapp_message(
@@ -61,9 +62,12 @@ def send_whatsapp_message(
         return message.sid
 
     except Exception as e:
+        # Generar un message_sid único para cada error (usando UUID) para evitar duplicados
+        error_message_sid = f"error_{str(uuid.uuid4())}"
+
         # Registrar el error en el log
         log_twilio_outbound(
-            message_sid=f"error_{to_whatsapp}",
+            message_sid=error_message_sid,
             from_number=sender,
             to_number=to_whatsapp,
             body=body,

@@ -1,0 +1,43 @@
+###############################################################
+# USO POR AMBIENTE:
+#
+# Desarrollo local:
+#   docker-compose --env-file .env.docker up -d
+#
+# Test (cambiar DGII_AMBIENTE a certecf en .env.test si lo usas):
+#   docker-compose --env-file .env.test up -d
+#
+# Producción:
+#   docker-compose --env-file .env.prod up -d
+#
+# Cambia la variable DGII_AMBIENTE en cada archivo .env según el ambiente:
+#   testecf  -> desarrollo
+#   certecf  -> pruebas DGII
+#   ecf      -> producción real
+###############################################################
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5436:5432"
+    volumes:
+      - db-data-citas:/var/lib/postgresql/data
+  # web:
+  #   build: .
+  #   command: gunicorn web_django.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120 --graceful-timeout 30 --log-level info
+  #   env_file: .env.docker
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - db
+  #     - minio
+  #     - redis
+  #   volumes:
+  #     - .:/app
+
+volumes:
+  db-data-citas:

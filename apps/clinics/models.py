@@ -5,6 +5,7 @@ class Clinic(models.Model):
     name = models.CharField(max_length=150)
     address = models.CharField(max_length=200)
     phone_number = models.CharField(max_length=30)
+    company = models.ForeignKey("accounts.Company", on_delete=models.CASCADE, related_name="clinics", null=True, blank=True)
 
     def __str__(self):
         return self.name
