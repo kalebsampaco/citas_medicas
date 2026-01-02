@@ -28,6 +28,7 @@ urlpatterns = [
     # Acepta /api/appointments y /api/appointments/
     re_path(r"^api/appointments/?", include("apps.appointments.urls")),
     path("api/notifications/", include("apps.notifications.urls")),
+    path("api/chat/", include("apps.chat.urls")),
     # Swagger
     path("swagger<format>/", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),

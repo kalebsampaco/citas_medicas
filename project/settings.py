@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "apps.appointments",
     "apps.notifications",
     "apps.audit",
+    "apps.chat",
 ]
 
 MIDDLEWARE = [
@@ -137,3 +138,9 @@ AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "citas-bucke
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "minioadmin")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "minioadmin")
 AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "http://localhost:9000")
+
+# LLM provider settings (Ollama by default, switchable to OpenAI)
+LLM_PROVIDER = env("LLM_PROVIDER", default="ollama")
+OLLAMA_URL = env("OLLAMA_URL", default="http://127.0.0.1:11434")
+OLLAMA_MODEL = env("OLLAMA_MODEL", default="mistral")
+OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
