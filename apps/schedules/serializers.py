@@ -1,4 +1,4 @@
-from apps.clinics.models import Room
+from apps.clinics.models import Room, Clinic
 from apps.doctors.models import Doctor
 from rest_framework import serializers
 
@@ -7,13 +7,15 @@ from .models import Schedule
 
 class ScheduleSerializer(serializers.ModelSerializer):
     doctor_name = serializers.CharField(source="doctor.__str__", read_only=True)
+    clinic_name = serializers.CharField(source="clinic.__str__", read_only=True)
     room_name = serializers.CharField(source="room.__str__", read_only=True)
 
     class Meta:
         model = Schedule
-        fields = ["id", "doctor", "doctor_name", "room", "room_name", "date", "start_time", "end_time", "slot_minutes", "is_available", "created_at", "updated_at"]
+        fields = ["id", "doctor", "doctor_name", "clinic", "clinic_name", "room", "room_name", "date", "start_time", "end_time", "slot_minutes", "is_available", "created_at", "updated_at"]
         read_only_fields = ["created_at", "updated_at"]
         extra_kwargs = {
+            "clinic": {"required": True},
             "room": {"required": False, "allow_null": True}
         }
 

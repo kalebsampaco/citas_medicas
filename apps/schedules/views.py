@@ -19,4 +19,11 @@ class ScheduleViewSet(viewsets.ModelViewSet):
         return Schedule.objects.filter(doctor__company=user.company)
 
     def perform_create(self, serializer):
+        # Si no viene clinic, usar la del doctor
+        doctor = serializer.validated_data.get('doctor')
+        clinic = serializer.validated_data.get('clinic')
+        
+        if not clinic and doctor and getattr(doctor, 'clinic_id', None):
+            serializer.validated_data['clinic'] = doctor.clinic
+        
         serializer.save()

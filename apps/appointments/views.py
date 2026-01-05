@@ -26,6 +26,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         # Mostrar todas las citas de la empresa (de cualquier paciente/médico)
         return Appointment.objects.filter(patient__company=company)
 
+    def perform_create(self, serializer):
+        # Si no viene clinic, usar la del doctor
+        doctor = serializer.validated_data.get('doctor')
+        clinic = serializer.validated_data.get('clinic')
+        
+        if not clinic and doctor and getattr(doctor, 'clinic_id', None):
+            serializer.validated_data['clinic'] = doctor.clinic
+        
+        serializer.save()
+
     @action(detail=True, methods=["get"])
     def actions(self, request, pk=None):
         appointment = self.get_object()

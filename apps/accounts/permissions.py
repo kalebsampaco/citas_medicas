@@ -9,6 +9,17 @@ class IsCompanyAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and (request.user.is_super_admin or request.user.is_company_admin)
 
+class IsCompanyAdminOrReadOnly(permissions.BasePermission):
+    """Permite lectura (GET) para usuarios autenticados de la empresa, escritura solo para admin."""
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        # Lectura permitida para cualquier usuario autenticado de la empresa
+        if request.method in permissions.SAFE_METHODS:
+            return bool(getattr(request.user, 'company', None))
+        # Escritura solo para admin
+        return request.user.is_super_admin or request.user.is_company_admin
+
 class HasPermission(permissions.BasePermission):
     required_permission = None
 

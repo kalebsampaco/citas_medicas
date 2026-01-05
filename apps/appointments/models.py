@@ -11,6 +11,7 @@ class AppointmentStatus(models.TextChoices):
 
 class Appointment(models.Model):
     patient = models.ForeignKey("patients.Patient", on_delete=models.CASCADE, related_name="appointments")
+    clinic = models.ForeignKey("clinics.Clinic", on_delete=models.PROTECT, related_name="appointments")
     schedule = models.ForeignKey("schedules.Schedule", on_delete=models.PROTECT, related_name="appointments")
     doctor = models.ForeignKey("doctors.Doctor", on_delete=models.PROTECT)
     room = models.ForeignKey("clinics.Room", on_delete=models.PROTECT)

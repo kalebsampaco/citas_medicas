@@ -1,4 +1,4 @@
-from apps.accounts.permissions import (IsCompanyAdmin,
+from apps.accounts.permissions import (IsCompanyAdminOrReadOnly,
                                        IsPaymentActiveOrSuperAdmin)
 from rest_framework import serializers, viewsets
 
@@ -8,7 +8,7 @@ from .serializers import ClinicSerializer, RoomSerializer
 
 class ClinicViewSet(viewsets.ModelViewSet):
     serializer_class = ClinicSerializer
-    permission_classes = [IsCompanyAdmin, IsPaymentActiveOrSuperAdmin]
+    permission_classes = [IsCompanyAdminOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user
@@ -40,7 +40,7 @@ class ClinicViewSet(viewsets.ModelViewSet):
 
 class RoomViewSet(viewsets.ModelViewSet):
     serializer_class = RoomSerializer
-    permission_classes = [IsCompanyAdmin, IsPaymentActiveOrSuperAdmin]
+    permission_classes = [IsCompanyAdminOrReadOnly]
 
     def get_queryset(self):
         user = self.request.user

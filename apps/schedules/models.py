@@ -3,6 +3,7 @@ from django.db import models
 
 class Schedule(models.Model):
     doctor = models.ForeignKey("doctors.Doctor", on_delete=models.CASCADE, related_name="schedules")
+    clinic = models.ForeignKey("clinics.Clinic", on_delete=models.CASCADE, related_name="schedules")
     # Room can be optional for disponibilidad general
     room = models.ForeignKey("clinics.Room", on_delete=models.SET_NULL, related_name="schedules", null=True, blank=True)
     date = models.DateField()

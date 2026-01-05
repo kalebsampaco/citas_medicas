@@ -1,6 +1,6 @@
 from apps.accounts.models.company import Company
 from apps.accounts.models.user import User
-from apps.clinics.models import Room
+from apps.clinics.models import Room, Clinic
 from django.db import models
 
 
@@ -11,6 +11,7 @@ class Doctor(models.Model):
     email = models.EmailField(null=True, blank=True)
     phone_number = models.CharField(max_length=30)
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='doctors', null=True, blank=True)
+    clinic = models.ForeignKey(Clinic, on_delete=models.SET_NULL, related_name='doctors', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='doctors_created', null=True, blank=True)
     room = models.ForeignKey(Room, on_delete=models.SET_NULL, related_name='doctors', null=True, blank=True)
 
