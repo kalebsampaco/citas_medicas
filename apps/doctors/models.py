@@ -1,6 +1,6 @@
 from apps.accounts.models.company import Company
 from apps.accounts.models.user import User
-from apps.clinics.models import Room, Clinic
+from apps.clinics.models import Clinic, Room
 from django.db import models
 
 

@@ -1,4 +1,4 @@
-from apps.clinics.models import Room, Clinic
+from apps.clinics.models import Clinic, Room
 from rest_framework import serializers
 
 from .models import Doctor
