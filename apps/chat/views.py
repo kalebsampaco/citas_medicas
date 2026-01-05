@@ -15,12 +15,6 @@ class ChatSessionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsPaymentActiveOrSuperAdmin]
 
     def get_queryset(self):
-        # Detectar si es una solicitud fake de Swagger/drf_yasg para generar esquema
-        if getattr(self, 'swagger_fake_view', False):
-            return ChatSession.objects.none()
-        # Si no hay usuario autenticado, retornar queryset vacío
-        if not self.request.user or not self.request.user.is_authenticated:
-            return ChatSession.objects.none()
         return ChatSession.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):

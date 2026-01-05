@@ -56,3 +56,6 @@ celerybeat.pid
 
 # Backup files
 *.bak
+
+# Local maintenance scripts
+scripts/reset_passwords.py
