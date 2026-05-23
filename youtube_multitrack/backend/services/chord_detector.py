@@ -1,18 +1,18 @@
 """
-Chord detection via librosa chroma features + optional OpenAI enhancement.
+Chord detection via librosa chroma features + optional Ollama enhancement.
 
 Pipeline:
   1. Extract chroma_cqt features from the audio.
   2. Match each segment to the closest chord template (24 chords).
   3. Simplify the sequence by merging consecutive identical chords.
-  4. (Optional) Send the raw sequence to OpenAI to produce a clean,
+  4. (Optional) Send the raw sequence to Ollama to produce a clean,
      formatted chord chart with section labels.
 """
 
-import os
 import textwrap
 from typing import Optional
 
+import httpx
 import librosa
 import numpy as np
 
@@ -98,28 +98,27 @@ def detect_chords(
 
 
 # ---------------------------------------------------------------------------
-# OpenAI enhancement (optional)
+# Ollama enhancement (optional)
 # ---------------------------------------------------------------------------
 
 def enhance_with_ai(
     simplified: list[tuple[float, str]],
     song_title: str,
     bpm: float,
-    openai_api_key: Optional[str] = None,
+    ollama_url: Optional[str] = None,
+    ollama_model: str = "mistral",
 ) -> str:
     """
-    Use OpenAI GPT to produce a structured, human-readable chord chart.
-    Falls back to a plain text chart if no API key is provided.
+    Use Ollama to produce a structured, human-readable chord chart.
+    Falls back to a plain text chart if Ollama is unavailable.
     """
     # Plain-text fallback
     plain = _build_plain_chart(simplified, song_title, bpm)
 
-    if not openai_api_key:
+    if not ollama_url:
         return plain
 
     try:
-        from openai import OpenAI
-
         raw_sequence = " | ".join(
             f"[{_fmt_time(t)}] {c}" for t, c in simplified
         )
@@ -143,14 +142,18 @@ def enhance_with_ai(
             """
         ).strip()
 
-        client = OpenAI(api_key=openai_api_key)
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=1500,
-            temperature=0.3,
+        response = httpx.post(
+            f"{ollama_url.rstrip('/')}/api/generate",
+            json={
+                "model": ollama_model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": 0.3},
+            },
+            timeout=60.0,
         )
-        return response.choices[0].message.content or plain
+        response.raise_for_status()
+        return response.json().get("response", "").strip() or plain
     except Exception:
         return plain
 

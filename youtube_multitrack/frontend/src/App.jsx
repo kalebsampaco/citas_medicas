@@ -96,7 +96,7 @@ export default function App() {
       </main>
 
       <footer className="text-center pb-8 text-white/30 text-xs">
-        YouTube Multitrack · IA generativa de acordes · powered by Demucs + OpenAI
+        YouTube Multitrack · IA generativa de acordes · powered by Demucs + Ollama
       </footer>
     </div>
   )

@@ -75,7 +75,8 @@ _jobs_lock = threading.Lock()
 WORK_DIR = Path(os.getenv("WORK_DIR", "/tmp/multitrack_jobs"))
 WORK_DIR.mkdir(parents=True, exist_ok=True)
 
-OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral")
 
 
 # ---------------------------------------------------------------------------
@@ -162,15 +163,16 @@ def _process_job(job_id: str, youtube_url: str):
         # 5. Chord detection
         _update_job(job_id, status=JobStatus.DETECTING_CHORDS, progress=70, message="Detectando acordes…")
         chord_result = detect_chords(audio_path)
-        _update_job(job_id, progress=78, message="Acordes detectados, mejorando con IA…")
+        _update_job(job_id, progress=78, message="Acordes detectados, mejorando con IA (Ollama)…")
 
         chord_text = enhance_with_ai(
             chord_result["simplified"],
             song_title=info["title"],
             bpm=bpm,
-            openai_api_key=OPENAI_API_KEY,
+            ollama_url=OLLAMA_URL,
+            ollama_model=OLLAMA_MODEL,
         )
-        _update_job(job_id, progress=85, message="Acorde generado por IA.")
+        _update_job(job_id, progress=85, message="Acordes generados con IA.")
 
         # 6. PDF
         _update_job(job_id, status=JobStatus.CREATING_PDF, progress=87, message="Creando PDF de acordes…")

@@ -31,7 +31,7 @@ export default function Hero() {
 
       <div className="mt-4 inline-flex items-center gap-1.5 text-xs text-brand-400 font-medium">
         <Zap className="w-3.5 h-3.5" />
-        Demucs · librosa · OpenAI GPT-4o-mini · ReportLab
+        Demucs · librosa · Ollama · ReportLab
       </div>
     </header>
   )

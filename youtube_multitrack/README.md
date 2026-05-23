@@ -10,7 +10,7 @@ App **mobile-first** que toma una URL de YouTube y genera:
 | `stems/other.mp3` | Resto de instrumentos (Demucs) |
 | `click.wav` | Click track / metrónomo (librosa) |
 | `guide_voice.wav` | Voz guía + click mezclados |
-| `chords.pdf` | Acordes generados con IA (OpenAI GPT-4o-mini) |
+| `chords.pdf` | Acordes generados con IA (Ollama) |
 
 Todo empaquetado en un **ZIP** listo para descargar.
 
@@ -24,7 +24,7 @@ Todo empaquetado en un **ZIP** listo para descargar.
 | Separación de pistas | **Demucs** `htdemucs` (Meta AI) |
 | Beat / click | **librosa** |
 | Detección de acordes | **librosa** chroma + plantillas |
-| Mejora de acordes | **OpenAI GPT-4o-mini** (opcional) |
+| Mejora de acordes | **Ollama** (opcional) |
 | PDF | **ReportLab** |
 | Descarga de audio | **yt-dlp** + ffmpeg |
 | Frontend | **React 18** + **Vite** + **Tailwind CSS 3** |
@@ -37,10 +37,20 @@ Todo empaquetado en un **ZIP** listo para descargar.
 ```bash
 cd youtube_multitrack
 
-# (Opcional) Configura tu API key de OpenAI para acordes mejorados
-echo "OPENAI_API_KEY=sk-..." > .env
+# (Opcional) Configura Ollama para acordes mejorados
+cat > .env <<'EOF'
+OLLAMA_URL=http://host.docker.internal:11434
+OLLAMA_MODEL=mistral
+EOF
 
 docker compose up --build
+```
+
+Si vas a usar mejora de acordes con IA, asegúrate de tener Ollama corriendo y el modelo descargado, por ejemplo:
+
+```bash
+ollama pull mistral
+ollama serve
 ```
 
 - Frontend: http://localhost:5173  
@@ -65,7 +75,8 @@ sudo apt install ffmpeg libsndfile1
 pip install -r requirements.txt
 
 # Variables de entorno
-export OPENAI_API_KEY=sk-...   # opcional
+export OLLAMA_URL=http://127.0.0.1:11434   # opcional
+export OLLAMA_MODEL=mistral                # opcional
 
 uvicorn main:app --reload --port 8000
 ```
@@ -86,7 +97,8 @@ npm run dev   # http://localhost:5173
 
 | Variable | Requerida | Descripción |
 |---|---|---|
-| `OPENAI_API_KEY` | No | API key de OpenAI para mejorar el chord chart con GPT-4o-mini. Sin clave, se usa detección básica. |
+| `OLLAMA_URL` | No | URL base de Ollama para mejorar el chord chart. Default: `http://127.0.0.1:11434` |
+| `OLLAMA_MODEL` | No | Modelo de Ollama usado para estructurar el chord chart. Default: `mistral` |
 | `WORK_DIR` | No | Directorio temporal de trabajo. Default: `/tmp/multitrack_jobs` |
 
 ---
@@ -108,7 +120,7 @@ Usuario ──► [React Frontend]
          │  3. librosa.beat → click.wav         │
          │  4. Mezcla vocals + click → guide    │
          │  5. librosa.chroma → acordes         │
-         │  6. OpenAI GPT → chord chart         │
+         │  6. Ollama → chord chart             │
          │  7. ReportLab → chords.pdf           │
          │  8. zipfile → multitrack.zip         │
          └──────────────────────────────────────┘
@@ -164,4 +176,4 @@ Estados posibles: `pending` → `downloading` → `separating` → `generating_c
 - **Duración**: canciones de ≤5 min tardan ~3-5 min. Las de 5-10 min pueden tardar 8-12 min.
 - **Demucs**: requiere GPU para mayor velocidad. En CPU la separación tarda más.
 - **Copyright**: úsalo solo con música de la que tengas derechos o que sea libre de derechos.
-- **OpenAI**: sin API key los acordes se detectan con el algoritmo de plantillas de librosa (funcional pero menos elaborado).
+- **Ollama**: si no está disponible, los acordes se detectan con el algoritmo de plantillas de librosa (funcional pero menos elaborado).
